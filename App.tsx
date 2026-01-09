@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { PERSONAS, VIBES, MOCK_EXPERIENCES, MOCK_USERS, LanternIcon } from './constants';
-import { UserProfile, ItineraryResponse, MicroExperience } from './types';
-import Navigation from './components/Navigation';
-import { generateItinerary } from './services/geminiService';
+import { PERSONAS, VIBES, MOCK_EXPERIENCES, MOCK_USERS, LanternIcon } from './constants.tsx';
+import { UserProfile, ItineraryResponse, MicroExperience } from './types.ts';
+import Navigation from './components/Navigation.tsx';
+import { generateItinerary } from './services/geminiService.ts';
 
 // --- SUB-COMPONENTS (Defined outside App to prevent re-mounting) ---
 

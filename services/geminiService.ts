@@ -1,12 +1,19 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAIClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("Gemini API Key is missing in environment variables.");
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 export async function generateItinerary(
   prompt: string,
   userContext: { persona: string; interests: string[]; budget: string }
 ) {
+  const ai = getAIClient();
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: `
@@ -50,6 +57,7 @@ export async function generateItinerary(
 }
 
 export async function tagContent(text: string) {
+  const ai = getAIClient();
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: `Extract the most relevant "vibe tags" from this description of a Hong Kong place: "${text}". Return only a comma-separated list.`,
