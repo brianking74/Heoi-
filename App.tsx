@@ -7,6 +7,20 @@ import { generateItinerary, fetchLiveExperiences } from './services/geminiServic
 
 // --- SUB-COMPONENTS ---
 
+const ImageWithFallback: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
+  const [error, setError] = useState(false);
+  const fallbackSrc = 'https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?q=80&w=800&auto=format&fit=crop'; // General HK Skyline
+
+  return (
+    <img 
+      src={error ? fallbackSrc : src} 
+      alt={alt} 
+      className={className} 
+      onError={() => setError(true)}
+    />
+  );
+};
+
 const ProfileEditView: React.FC<{ 
   profile: UserProfile; 
   setProfile: React.Dispatch<React.SetStateAction<UserProfile>>; 
@@ -45,7 +59,7 @@ const ProfileEditView: React.FC<{
       <div className="flex flex-col items-center space-y-6 mb-12">
         <div className="relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
           <div className="w-40 h-40 rounded-full border-8 border-gray-50 p-2 shadow-2xl overflow-hidden bg-gray-100">
-             <img src={profile.photo || `https://api.dicebear.com/7.x/bottts/svg?seed=${profile.name}`} className="w-full h-full object-cover" alt="Me" />
+             <ImageWithFallback src={profile.photo || `https://api.dicebear.com/7.x/bottts/svg?seed=${profile.name}`} className="w-full h-full object-cover" alt="Me" />
           </div>
           <div className="absolute bottom-2 right-2 bg-black p-3 rounded-full shadow-xl">
              <span className="text-white text-xs">📷</span>
@@ -117,14 +131,14 @@ const SocialView: React.FC<{ users: any[]; currentUser: UserProfile; onChatReque
       {/* Current User Card */}
       <div className="group space-y-5 animate-fade-in border-4 border-gray-50 p-4 rounded-[45px]">
         <div className="relative aspect-square overflow-hidden rounded-[40px] shadow-2xl bg-gray-100">
-          <img src={currentUser.photo || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.name}`} alt={currentUser.name} className="w-full h-full object-cover" />
+          <ImageWithFallback src={currentUser.photo || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.name}`} alt={currentUser.name} className="w-full h-full object-cover" />
           <div className="absolute top-8 right-8">
              <span className="bg-black text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">You (Current)</span>
           </div>
           <div className="absolute bottom-10 left-10 text-white">
             <span className="bg-[#de2810] text-[9px] font-black px-2 py-0.5 rounded uppercase">{currentUser.persona}</span>
-            <h3 className="text-4xl font-black uppercase tracking-tighter">{currentUser.name}</h3>
-            <p className="text-xs italic opacity-80">"{currentUser.bio || 'Setting up my manifest...'}"</p>
+            <h3 className="text-4xl font-black uppercase tracking-tighter drop-shadow-lg">{currentUser.name}</h3>
+            <p className="text-xs italic opacity-80 drop-shadow-md">"{currentUser.bio || 'Setting up my manifest...'}"</p>
           </div>
         </div>
       </div>
@@ -133,11 +147,11 @@ const SocialView: React.FC<{ users: any[]; currentUser: UserProfile; onChatReque
       {users.map(user => (
         <div key={user.id} className="group space-y-5 animate-fade-in">
           <div className="relative aspect-square overflow-hidden rounded-[40px] shadow-2xl bg-gray-100">
-            <img src={user.photo} alt={user.name} className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" />
+            <ImageWithFallback src={user.photo} alt={user.name} className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" />
             <div className="absolute bottom-10 left-10 text-white">
               <span className="bg-[#de2810] text-[9px] font-black px-2 py-0.5 rounded uppercase">{user.persona}</span>
-              <h3 className="text-4xl font-black uppercase tracking-tighter">{user.name}</h3>
-              <p className="text-xs italic">"{user.bio}"</p>
+              <h3 className="text-4xl font-black uppercase tracking-tighter drop-shadow-lg">{user.name}</h3>
+              <p className="text-xs italic drop-shadow-md">"{user.bio}"</p>
             </div>
           </div>
           <div className="flex space-x-4">
@@ -178,7 +192,7 @@ const Paywall: React.FC<{ onClose: () => void; onUpgrade: () => void }> = ({ onC
 const ExperienceDetailView: React.FC<{ exp: MicroExperience; onClose: () => void; onStart: (exp: MicroExperience) => void; pathActive: boolean }> = ({ exp, onClose, onStart, pathActive }) => (
   <div className="fixed inset-0 z-[60] bg-white overflow-y-auto animate-fade-in pb-20">
     <div className="relative h-[60vh]">
-      <img src={exp.image} alt={exp.title} className="w-full h-full object-cover" />
+      <ImageWithFallback src={exp.image} alt={exp.title} className="w-full h-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
       <button onClick={onClose} className="absolute top-12 left-8 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-xl text-black font-black">←</button>
       {exp.isLive && (
@@ -228,13 +242,13 @@ const DiscoverView: React.FC<{ experiences: MicroExperience[], onSelectExperienc
     <div className="space-y-12">
       {experiences.map(exp => (
         <div key={exp.id} className="group space-y-5 animate-fade-in" onClick={() => onSelectExperience(exp)}>
-          <div className="relative aspect-[3/4] overflow-hidden rounded-[40px] shadow-2xl bg-gray-100 cursor-pointer">
-            <img src={exp.image} alt={exp.title} className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" />
+          <div className="relative aspect-[3/4] overflow-hidden rounded-[40px] shadow-2xl bg-gray-100 cursor-pointer border border-gray-50">
+            <ImageWithFallback src={exp.image} alt={exp.title} className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" />
             {exp.isLive && <div className="absolute top-8 right-8"><span className="bg-[#de2810] text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg">Live</span></div>}
             <div className="absolute top-8 left-8"><span className="bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">{exp.vibe[0]}</span></div>
-            <div className="absolute bottom-0 left-0 right-0 p-10 bg-gradient-to-t from-black via-black/40 to-transparent text-white">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-[#de2810]">Location: {exp.location}</p>
-              <h3 className="text-3xl font-black leading-tight tracking-tight uppercase">{exp.title}</h3>
+            <div className="absolute bottom-0 left-0 right-0 p-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-[#de2810] drop-shadow-sm">Location: {exp.location}</p>
+              <h3 className="text-3xl font-black leading-tight tracking-tight uppercase drop-shadow-lg">{exp.title}</h3>
             </div>
           </div>
         </div>
@@ -259,7 +273,14 @@ const App: React.FC = () => {
   const [selectedExperience, setSelectedExperience] = useState<MicroExperience | null>(null);
   const [pathActive, setPathActive] = useState(false);
 
+  // Robust check for the API key in the browser environment
+  const isApiKeyMissing = !process.env.API_KEY || process.env.API_KEY === 'undefined';
+
   const handleSyncLive = async () => {
+    if (isApiKeyMissing) {
+      alert("System Offline: The Heoi! Lantern is out of oil. (API_KEY missing in Netlify environment).");
+      return;
+    }
     if (!profile.isPremium) { setShowPaywall(true); return; }
     setIsSyncing(true);
     try {
@@ -269,16 +290,30 @@ const App: React.FC = () => {
         id: `live-${Date.now()}`, title: `Trending: ${vibe} in HK`, vibe: [vibe, 'Verified'], difficulty: 'Easy', cost: '$$', location: 'Multiple Spots', district: 'HK Live', duration: 'Varies', image: 'https://images.unsplash.com/photo-1516939884455-1445c8652f83?q=80&w=800&auto=format&fit=crop', description: result.rawText, author: 'Heoi_AI', isLive: true, sourceUrl: result.sources[0], mapUrl: result.sources.find(s => s.includes('google.com/maps'))
       };
       setExperiences(prev => [liveCard, ...prev]);
-    } catch (err) { alert("Sync failed. Check your connection."); } finally { setIsSyncing(false); }
+    } catch (err: any) { 
+      console.error("Sync Failure Details:", err);
+      if (err.message === "API_KEY_MISSING") {
+        alert("Configuration Error: API Key not found.");
+      } else {
+        alert("City Sync Error: The 852 frequency is jammed right now. Please check your connection or try again later."); 
+      }
+    } finally { setIsSyncing(false); }
   };
 
   const handleAiPlan = async () => {
+    if (isApiKeyMissing) {
+      alert("System Offline: Lantern oil needed (API Key missing).");
+      return;
+    }
     if (!aiPrompt) return;
     setIsGenerating(true);
     try {
       const result = await generateItinerary(aiPrompt, { persona: profile.persona, interests: profile.interests, budget: profile.budget });
       setItinerary(result);
-    } catch (err) { console.error(err); } finally { setIsGenerating(false); }
+    } catch (err) { 
+      console.error(err); 
+      alert("Illumination Failed: The AI couldn't find a path. Try being more specific with your request.");
+    } finally { setIsGenerating(false); }
   };
 
   const handleChatRequest = (user: any) => {
@@ -325,7 +360,7 @@ const App: React.FC = () => {
           {profile.isPremium && <span className="text-[8px] font-black bg-[#de2810] text-white px-2 py-0.5 rounded-full tracking-tighter leading-none h-4 flex items-center">ELITE</span>}
         </div>
         <button onClick={() => setActiveTab('profile')} className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden border-2 border-gray-50 shadow-sm">
-           <img src={profile.photo || `https://api.dicebear.com/7.x/bottts/svg?seed=${profile.name}`} alt="Avatar" className="w-full h-full object-cover" />
+           <ImageWithFallback src={profile.photo || `https://api.dicebear.com/7.x/bottts/svg?seed=${profile.name}`} alt="Avatar" className="w-full h-full object-cover" />
         </button>
       </header>
 
@@ -362,7 +397,7 @@ const App: React.FC = () => {
             <div className="relative mb-12">
                <div className="w-[180px] h-[180px] rounded-full border-[10px] border-white ring-1 ring-gray-100 shadow-2xl p-2 overflow-hidden bg-white">
                  <div className="w-full h-full rounded-full overflow-hidden bg-gray-50">
-                    <img src={profile.photo || `https://api.dicebear.com/7.x/bottts/svg?seed=${profile.name}`} className="w-full h-full object-cover" alt="Me" />
+                    <ImageWithFallback src={profile.photo || `https://api.dicebear.com/7.x/bottts/svg?seed=${profile.name}`} className="w-full h-full object-cover" alt="Me" />
                  </div>
                </div>
                <div className="absolute bottom-4 right-4 bg-[#de2810] w-12 h-12 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
@@ -390,6 +425,13 @@ const App: React.FC = () => {
                   Safety & Privacy
                </button>
             </div>
+            
+            {/* Helper notice for developers */}
+            {isApiKeyMissing && (
+              <div className="mt-8 p-4 bg-red-50 border border-red-100 rounded-2xl text-[10px] text-red-500 font-bold uppercase tracking-widest text-center">
+                Gemini API Key Missing in Netlify Environment. Please check build settings.
+              </div>
+            )}
           </div>
         )}
       </main>
