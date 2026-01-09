@@ -1,0 +1,8 @@
+{
+  "name": "Heoi! (去) - The 852 Hideout",
+  "description": "A quirky, AI-powered social discovery app for exploring the hidden gems of Hong Kong and meeting like-minded explorers.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
