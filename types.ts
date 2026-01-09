@@ -14,6 +14,9 @@ export interface MicroExperience {
   description: string;
   author: string;
   address?: string;
+  sourceUrl?: string;
+  mapUrl?: string;
+  isLive?: boolean;
 }
 
 export interface UserProfile {

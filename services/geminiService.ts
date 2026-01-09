@@ -56,11 +56,39 @@ export async function generateItinerary(
   return JSON.parse(response.text) as any;
 }
 
-export async function tagContent(text: string) {
+export async function fetchLiveExperiences(vibe: string) {
   const ai = getAIClient();
+  // Using gemini-2.5-flash for Maps grounding support
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `Extract the most relevant "vibe tags" from this description of a Hong Kong place: "${text}". Return only a comma-separated list.`,
+    model: "gemini-2.5-flash",
+    contents: `Find 3 real-world, current "hidden gem" experiences or events in Hong Kong that fit the vibe: "${vibe}". 
+               Include specific locations, estimated costs, and a brief description. 
+               Look for sources like TimeOut HK or DiscoverHK. 
+               Return the data as a JSON array of objects.`,
+    config: {
+      tools: [{ googleSearch: {} }, { googleMaps: {} }],
+      toolConfig: {
+        retrievalConfig: {
+          latLng: {
+            latitude: 22.2855, // Center on Hong Kong (Central)
+            longitude: 114.1577
+          }
+        }
+      },
+      // Note: While the prompt says 'Return as JSON', 
+      // we must be careful because maps grounding output might be text.
+      // We will ask for a specific format and parse it.
+    },
   });
-  return response.text.split(',').map(s => s.trim());
+
+  const text = response.text || "";
+  // Extract URLs from grounding chunks
+  const sourceUrls = response.candidates?.[0]?.groundingMetadata?.groundingChunks
+    ?.map((chunk: any) => chunk.web?.uri || chunk.maps?.uri)
+    .filter(Boolean) || [];
+
+  return {
+    rawText: text,
+    sources: sourceUrls
+  };
 }
