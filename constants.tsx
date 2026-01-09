@@ -67,14 +67,14 @@ export const MOCK_EXPERIENCES = [
   {
     id: '1',
     title: 'Neon Sign Cemetery Walk',
-    vibe: ['Photo Spots', 'Culture'],
+    vibe: ['Photo Spots', 'Culture', 'Neon Nightlife'],
     difficulty: 'Easy',
     cost: '$',
     location: 'Jordan',
     district: 'Kowloon',
     duration: '1.5 hrs',
-    image: 'https://images.unsplash.com/photo-1542614392-446467384a22?q=80&w=800&auto=format&fit=crop',
-    description: 'A walk through the quiet alleys of Jordan where the last master glassblowers still work.',
+    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=800&auto=format&fit=crop',
+    description: 'A walk through the quiet alleys of Jordan where the last master glassblowers still work. Experience the true electric glow of the 852 as neon signs flicker above hidden workshops.',
     author: 'Sam_HK',
     address: 'Starting at Jordan MTR Exit A, Temple Street'
   },
@@ -88,7 +88,7 @@ export const MOCK_EXPERIENCES = [
     district: 'HK Island',
     duration: '3 hrs',
     image: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=800&auto=format&fit=crop',
-    description: 'An underground jazz bar tucked behind an incense shop. Entry via a sliding bookshelf.',
+    description: 'An underground jazz bar tucked behind an incense shop. Entry via a sliding bookshelf. One of the city\'s best kept sonic secrets.',
     author: 'JazzCat',
     address: 'Ground Floor, 12 Square Street, Sheung Wan'
   },
@@ -101,8 +101,8 @@ export const MOCK_EXPERIENCES = [
     location: 'Kwun Tong',
     district: 'Kowloon',
     duration: '4 hrs',
-    image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=800&auto=format&fit=crop',
-    description: 'Experience the raw energy of Hong Kong\'s indie scene in a converted industrial warehouse. Canto-shoegaze at its finest.',
+    image: 'https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=800&auto=format&fit=crop',
+    description: 'Experience the raw energy of Hong Kong\'s indie scene in a converted industrial warehouse. Canto-shoegaze and math rock at its finest.',
     author: 'IndieSoul',
     address: 'Unit 4C, 15 Hung To Road, Kwun Tong'
   },
@@ -116,7 +116,7 @@ export const MOCK_EXPERIENCES = [
     district: 'Lantau',
     duration: '4 hrs',
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=800&auto=format&fit=crop',
-    description: 'Explore the overgrown ruins of a 200-year-old fishing village on the edge of the airport.',
+    description: 'Explore the overgrown ruins of a 200-year-old fishing village on the edge of Lantau. Nature reclaiming history.',
     author: 'TrailMaster',
     address: 'Ma Wan Chung Village, Near Tung Chung Pier'
   }
