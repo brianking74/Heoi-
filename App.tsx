@@ -205,17 +205,33 @@ const ExperienceDetailView: React.FC<{ exp: MicroExperience; onClose: () => void
         <h2 className="text-5xl font-black text-gray-900 tracking-tighter uppercase leading-none">{exp.title}</h2>
       </div>
       <div className="grid grid-cols-2 gap-4 border-y border-gray-100 py-8">
-         <div className="space-y-1"><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Effort</p><p className="font-bold">{exp.difficulty}</p></div>
-         <div className="space-y-1"><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Investment</p><p className="font-bold text-[#de2810]">{exp.cost}</p></div>
-         <div className="space-y-1"><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Time Window</p><p className="font-bold">{exp.duration}</p></div>
+         <div className="space-y-1"><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">When</p><p className="font-bold text-[#de2810]">{exp.date || 'Check Source'}</p></div>
+         <div className="space-y-1"><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Venue</p><p className="font-bold text-gray-900 truncate">{exp.venue || 'Multiple Venues'}</p></div>
+         <div className="space-y-1"><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Investment</p><p className="font-bold">{exp.cost}</p></div>
          <div className="space-y-1"><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Curator</p><p className="font-bold">@{exp.author}</p></div>
       </div>
-      {(exp.address || exp.mapUrl) && (
+      {(exp.address || exp.mapUrl || exp.sourceUrl) && (
         <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Exact Spot</h3>
-          <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex items-start justify-between space-x-4">
-             <div className="flex items-start space-x-4"><span className="text-xl">📍</span><p className="font-bold text-gray-900 leading-snug">{exp.address || 'Location Found via Maps'}</p></div>
-             {exp.mapUrl && <a href={exp.mapUrl} target="_blank" rel="noopener noreferrer" className="bg-white p-3 rounded-full shadow-md text-sm">🗺️</a>}
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Authentic Source</h3>
+          <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex flex-col space-y-4">
+             {exp.address && (
+               <div className="flex items-start space-x-4">
+                 <span className="text-xl">📍</span>
+                 <p className="font-bold text-gray-900 leading-snug">{exp.address}</p>
+               </div>
+             )}
+             <div className="flex space-x-3">
+               {exp.mapUrl && (
+                 <a href={exp.mapUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-white p-4 rounded-2xl shadow-sm text-[10px] font-black uppercase tracking-widest text-center border border-gray-100">
+                   View on Maps 🗺️
+                 </a>
+               )}
+               {exp.sourceUrl && (
+                 <a href={exp.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-white p-4 rounded-2xl shadow-sm text-[10px] font-black uppercase tracking-widest text-center border border-gray-100">
+                   Official Page 🔗
+                 </a>
+               )}
+             </div>
           </div>
         </div>
       )}
@@ -232,12 +248,23 @@ const ExperienceDetailView: React.FC<{ exp: MicroExperience; onClose: () => void
 
 const DiscoverView: React.FC<{ experiences: MicroExperience[], onSelectExperience: (exp: MicroExperience) => void, isSyncing: boolean, onSync: () => void }> = ({ experiences, onSelectExperience, isSyncing, onSync }) => (
   <div className="pb-32 pt-24 px-6 max-w-md mx-auto space-y-12">
-    <header className="flex items-end justify-between">
+    <header className="flex items-start justify-between">
       <div className="space-y-2">
         <div className="flex items-center space-x-2 text-[#de2810]"><LanternIcon className="w-5 h-5" /><span className="text-[10px] font-black uppercase tracking-[0.4em]">Heoi Lanterns</span></div>
         <h2 className="text-5xl font-black text-gray-900 tracking-tighter uppercase leading-none">Discovery</h2>
       </div>
-      <button onClick={onSync} disabled={isSyncing} className="bg-black text-white p-4 rounded-full shadow-xl hover:bg-[#de2810] transition-all disabled:opacity-50">{isSyncing ? '⌛' : '📡'}</button>
+      <button 
+        onClick={onSync} 
+        disabled={isSyncing} 
+        className="flex flex-col items-center group cursor-pointer disabled:opacity-50"
+      >
+        <div className="bg-black text-white p-4 rounded-full shadow-xl group-hover:bg-[#de2810] transition-all mb-2 flex items-center justify-center w-14 h-14">
+          <span className={`text-xl ${isSyncing ? 'animate-spin' : ''}`}>
+            {isSyncing ? '⌛' : '📡'}
+          </span>
+        </div>
+        <span className="text-[8px] font-black uppercase tracking-widest text-gray-400">Live Sync</span>
+      </button>
     </header>
     <div className="space-y-12">
       {experiences.map(exp => (
@@ -245,9 +272,13 @@ const DiscoverView: React.FC<{ experiences: MicroExperience[], onSelectExperienc
           <div className="relative aspect-[3/4] overflow-hidden rounded-[40px] shadow-2xl bg-gray-100 cursor-pointer border border-gray-50">
             <ImageWithFallback src={exp.image} alt={exp.title} className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" />
             {exp.isLive && <div className="absolute top-8 right-8"><span className="bg-[#de2810] text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg">Live</span></div>}
-            <div className="absolute top-8 left-8"><span className="bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">{exp.vibe[0]}</span></div>
+            <div className="absolute top-8 left-8 flex flex-col space-y-2">
+              <span className="bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">{exp.vibe[0]}</span>
+              {exp.date && <span className="bg-black/90 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest self-start">{exp.date}</span>}
+            </div>
             <div className="absolute bottom-0 left-0 right-0 p-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-[#de2810] drop-shadow-sm">Location: {exp.location}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-[#de2810] drop-shadow-sm">Location: {exp.location}</p>
+              {exp.venue && <p className="text-[9px] font-bold uppercase opacity-80 mb-2 truncate">{exp.venue}</p>}
               <h3 className="text-3xl font-black leading-tight tracking-tight uppercase drop-shadow-lg">{exp.title}</h3>
             </div>
           </div>
@@ -285,11 +316,29 @@ const App: React.FC = () => {
     setIsSyncing(true);
     try {
       const vibe = profile.interests[Math.floor(Math.random() * profile.interests.length)] || 'Live Loud';
-      const result = await fetchLiveExperiences(vibe);
-      const liveCard: MicroExperience = {
-        id: `live-${Date.now()}`, title: `Trending: ${vibe} in HK`, vibe: [vibe, 'Verified'], difficulty: 'Easy', cost: '$$', location: 'Multiple Spots', district: 'HK Live', duration: 'Varies', image: 'https://images.unsplash.com/photo-1516939884455-1445c8652f83?q=80&w=800&auto=format&fit=crop', description: result.rawText, author: 'Heoi_AI', isLive: true, sourceUrl: result.sources[0], mapUrl: result.sources.find(s => s.includes('google.com/maps'))
-      };
-      setExperiences(prev => [liveCard, ...prev]);
+      const results = await fetchLiveExperiences(vibe);
+      
+      const newExperiences: MicroExperience[] = results.map((res: any, idx: number) => ({
+        id: `live-${Date.now()}-${idx}`,
+        title: res.title,
+        vibe: [vibe, 'Search Verified'],
+        difficulty: res.difficulty || 'Easy',
+        cost: res.cost || '$$',
+        location: res.location,
+        district: res.district,
+        duration: res.duration || 'Varies',
+        date: res.date,
+        venue: res.venue,
+        // Using a dynamic HK-themed image search proxy with the AI's keyword
+        image: `https://loremflickr.com/800/800/hongkong,${encodeURIComponent(res.imageKeyword || 'landmark')}/all?sig=${idx}`,
+        description: res.description,
+        author: 'Heoi_AI',
+        isLive: true,
+        sourceUrl: res.sourceUrl,
+        address: res.address
+      }));
+      
+      setExperiences(prev => [...newExperiences, ...prev]);
     } catch (err: any) { 
       console.error("Sync Failure Details:", err);
       if (err.message === "API_KEY_MISSING") {

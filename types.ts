@@ -17,6 +17,8 @@ export interface MicroExperience {
   sourceUrl?: string;
   mapUrl?: string;
   isLive?: boolean;
+  date?: string;
+  venue?: string;
 }
 
 export interface UserProfile {
