@@ -329,8 +329,8 @@ const App: React.FC = () => {
         duration: res.duration || 'Varies',
         date: res.date,
         venue: res.venue,
-        // Using a dynamic HK-themed image search proxy with the AI's keyword
-        image: `https://loremflickr.com/800/800/hongkong,${encodeURIComponent(res.imageKeyword || 'landmark')}/all?sig=${idx}`,
+        // Prioritize a direct URL from the source, otherwise use a highly targeted search
+        image: res.realImageUrl || `https://loremflickr.com/800/800/hongkong,${encodeURIComponent(res.imageKeyword || 'landmark')}/all?sig=${idx}`,
         description: res.description,
         author: 'Heoi_AI',
         isLive: true,
