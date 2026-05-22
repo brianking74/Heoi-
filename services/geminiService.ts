@@ -27,7 +27,7 @@ export async function fetchLiveExperiences(vibe: string): Promise<any[]> {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Current Date: ${today}.
-                 Find 3 ACTUAL, SPECIFIC events or pop-up activities in Hong Kong happening TODAY or this weekend.
+                 Find 6 ACTUAL, SPECIFIC events or pop-up activities in Hong Kong happening TODAY or this weekend.
                  Vibe: "${vibe}".
                  
                  Requirements:

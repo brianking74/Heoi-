@@ -1,25 +1,139 @@
 
-import React, { useState, useRef } from 'react';
-import { PERSONAS, VIBES, MOCK_EXPERIENCES, MOCK_USERS, LanternIcon } from './constants.tsx';
+import React, { useState, useRef, useEffect } from 'react';
+import { PERSONAS, VIBES, MOCK_EXPERIENCES, MOCK_USERS, ExploreIcon } from './constants.tsx';
 import { UserProfile, ItineraryResponse, MicroExperience } from './types.ts';
 import Navigation from './components/Navigation.tsx';
 import { generateItinerary, fetchLiveExperiences } from './services/geminiService.ts';
+import { useMapsLibrary } from '@vis.gl/react-google-maps';
+
+// --- GLOBAL MAPS QUEUE ---
+const placeSearchQueue: { query: string; resolve: (uri: string | null) => void; reject: (err: any) => void }[] = [];
+let isProcessingQueue = false;
+
+async function processPlaceSearchQueue(service: google.maps.places.PlacesService) {
+  if (isProcessingQueue) return;
+  isProcessingQueue = true;
+
+  while (placeSearchQueue.length > 0) {
+    const item = placeSearchQueue[0];
+    const cacheKey = `place-img-${item.query}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    
+    if (cached) {
+      item.resolve(cached === 'NOT_FOUND' ? null : cached);
+      placeSearchQueue.shift();
+      continue;
+    }
+
+    try {
+      const uri = await new Promise<string | null>((resolve, reject) => {
+        service.textSearch({ query: `${item.query} Hong Kong` }, (results, status) => {
+           if (status === 'OK' && results && results.length > 0) {
+             const placeWithPhotos = results.find(p => p.photos && p.photos.length > 0);
+             if (placeWithPhotos && placeWithPhotos.photos) {
+               resolve(placeWithPhotos.photos[0].getUrl({ maxWidth: 800, maxHeight: 800 }));
+             } else {
+               resolve(null);
+             }
+           } else if (status === 'OVER_QUERY_LIMIT') {
+             reject(new Error('OVER_QUERY_LIMIT'));
+           } else {
+             resolve(null);
+           }
+        });
+      });
+      
+      sessionStorage.setItem(cacheKey, uri || 'NOT_FOUND');
+      item.resolve(uri);
+      placeSearchQueue.shift();
+      // Add deliberate delay to respect Maps API quota
+      await new Promise(r => setTimeout(r, 800)); 
+    } catch (err: any) {
+      if (err.message === 'OVER_QUERY_LIMIT') {
+        // Wait longer on limit hit, don't shift so it retries
+        console.warn('Maps API limit hit, backing off...');
+        await new Promise(r => setTimeout(r, 3000));
+      } else {
+        item.resolve(null);
+        placeSearchQueue.shift();
+      }
+    }
+  }
+
+  isProcessingQueue = false;
+}
 
 // --- SUB-COMPONENTS ---
 
 const ImageWithFallback: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
   const [error, setError] = useState(false);
-  const fallbackSrc = 'https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?q=80&w=800&auto=format&fit=crop'; // General HK Skyline
+  // Use a reliable HK skyline image instead of random seed
+  const fallbackSrc = 'https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?q=80&w=800&auto=format&fit=crop'; 
 
   return (
     <img 
       src={error ? fallbackSrc : src} 
       alt={alt} 
       className={className} 
-      onError={() => setError(true)}
+      onError={() => { if(!error) setError(true); }}
+      referrerPolicy="no-referrer"
     />
   );
 };
+
+const PlaceImageWithFallback: React.FC<{ placeQuery: string; originalSrc: string; alt: string; className?: string }> = ({ placeQuery, originalSrc, alt, className }) => {
+  const [error, setError] = useState(false);
+  const [placePhotoUri, setPlacePhotoUri] = useState<string | null>(null);
+  const placesLib = useMapsLibrary('places');
+  
+  // Use a reliable Hong Kong image as an absolute last resort instead of random abstract picsum
+  const fallbackSrc = 'https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?q=80&w=800&auto=format&fit=crop'; 
+  
+  // Use a global queue to prevent OVER_QUERY_LIMIT when rendering multiple cards
+  useEffect(() => {
+    if (!placesLib || !placeQuery) return;
+    
+    const cacheKey = `place-img-${placeQuery}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    // If we have a cached photo, use it immediately
+    if (cached && cached !== 'NOT_FOUND') {
+      setPlacePhotoUri(cached);
+      return;
+    }
+
+    let isMounted = true;
+    const service = new placesLib.PlacesService(document.createElement('div'));
+
+    const searchPromise = new Promise<string | null>((resolve, reject) => {
+      placeSearchQueue.push({ query: placeQuery, resolve, reject });
+      processPlaceSearchQueue(service);
+    });
+
+    searchPromise.then(uri => {
+      if (isMounted && uri) {
+        setPlacePhotoUri(uri);
+      }
+    });
+
+    return () => { isMounted = false; };
+  }, [placesLib, placeQuery]);
+
+  const activeSrc = error ? fallbackSrc : (placePhotoUri || originalSrc);
+
+  return (
+    <img 
+      src={activeSrc} 
+      alt={alt} 
+      className={className} 
+      onError={() => {
+        // Only switch to fallback if we've genuinely failed to load BOTH the place photo and original image
+        if (!error) setError(true);
+      }}
+      referrerPolicy="no-referrer"
+    />
+  );
+};
+
 
 const ProfileEditView: React.FC<{ 
   profile: UserProfile; 
@@ -169,7 +283,7 @@ const Paywall: React.FC<{ onClose: () => void; onUpgrade: () => void }> = ({ onC
     <button onClick={onClose} className="absolute top-8 right-8 text-2xl font-black">✕</button>
     <div className="mt-20 space-y-8 flex-1">
       <div className="flex items-center space-x-3 text-[#de2810]">
-        <LanternIcon className="w-10 h-10" />
+        <ExploreIcon className="w-10 h-10" />
         <span className="text-xl font-black uppercase tracking-widest italic">Elite 852</span>
       </div>
       <h2 className="text-5xl font-black tracking-tighter uppercase leading-[0.9]">Unlock the <span className="text-[#de2810]">Full City</span></h2>
@@ -192,7 +306,12 @@ const Paywall: React.FC<{ onClose: () => void; onUpgrade: () => void }> = ({ onC
 const ExperienceDetailView: React.FC<{ exp: MicroExperience; onClose: () => void; onStart: (exp: MicroExperience) => void; pathActive: boolean }> = ({ exp, onClose, onStart, pathActive }) => (
   <div className="fixed inset-0 z-[60] bg-white overflow-y-auto animate-fade-in pb-20">
     <div className="relative h-[60vh]">
-      <ImageWithFallback src={exp.image} alt={exp.title} className="w-full h-full object-cover" />
+      <PlaceImageWithFallback
+        placeQuery={exp.venue || exp.title}
+        originalSrc={exp.image}
+        alt={exp.title}
+        className="w-full h-full object-cover"
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
       <button onClick={onClose} className="absolute top-12 left-8 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-xl text-black font-black">←</button>
       {exp.isLive && (
@@ -240,7 +359,7 @@ const ExperienceDetailView: React.FC<{ exp: MicroExperience; onClose: () => void
         <p className="text-lg font-medium leading-relaxed text-gray-700 whitespace-pre-line">{exp.description}</p>
       </div>
       <button onClick={() => onStart(exp)} disabled={pathActive} className={`w-full text-white py-6 rounded-3xl font-black uppercase tracking-[0.3em] shadow-2xl flex items-center justify-center space-x-3 transition-all ${pathActive ? 'bg-black' : 'bg-[#de2810]'}`}>
-         <span>{pathActive ? 'Connecting...' : 'Start Path'}</span><LanternIcon className={`w-5 h-5 ${pathActive ? 'animate-pulse' : ''}`} fill="white" />
+         <span>{pathActive ? 'Connecting...' : 'Start Path'}</span><ExploreIcon className={`w-5 h-5 ${pathActive ? 'animate-pulse' : ''}`} fill="white" />
       </button>
     </div>
   </div>
@@ -250,7 +369,7 @@ const DiscoverView: React.FC<{ experiences: MicroExperience[], onSelectExperienc
   <div className="pb-32 pt-24 px-6 max-w-md mx-auto space-y-12">
     <header className="flex items-start justify-between">
       <div className="space-y-2">
-        <div className="flex items-center space-x-2 text-[#de2810]"><LanternIcon className="w-5 h-5" /><span className="text-[10px] font-black uppercase tracking-[0.4em]">Heoi Lanterns</span></div>
+        <div className="flex items-center space-x-2 text-[#de2810]"><ExploreIcon className="w-5 h-5" /><span className="text-[10px] font-black uppercase tracking-[0.4em]">CityScout Radar</span></div>
         <h2 className="text-5xl font-black text-gray-900 tracking-tighter uppercase leading-none">Discovery</h2>
       </div>
       <button 
@@ -270,7 +389,12 @@ const DiscoverView: React.FC<{ experiences: MicroExperience[], onSelectExperienc
       {experiences.map(exp => (
         <div key={exp.id} className="group space-y-5 animate-fade-in" onClick={() => onSelectExperience(exp)}>
           <div className="relative aspect-[3/4] overflow-hidden rounded-[40px] shadow-2xl bg-gray-100 cursor-pointer border border-gray-50">
-            <ImageWithFallback src={exp.image} alt={exp.title} className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" />
+            <PlaceImageWithFallback
+              placeQuery={exp.venue || exp.title}
+              originalSrc={exp.image}
+              alt={exp.title}
+              className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+            />
             {exp.isLive && <div className="absolute top-8 right-8"><span className="bg-[#de2810] text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg">Live</span></div>}
             <div className="absolute top-8 left-8 flex flex-col space-y-2">
               <span className="bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">{exp.vibe[0]}</span>
@@ -309,7 +433,7 @@ const App: React.FC = () => {
 
   const handleSyncLive = async () => {
     if (isApiKeyMissing) {
-      alert("System Offline: The Heoi! Lantern is out of oil. (API_KEY missing in Netlify environment).");
+      alert("System Offline: The CityScout radar is offline. (API_KEY missing in Netlify environment).");
       return;
     }
     if (!profile.isPremium) { setShowPaywall(true); return; }
@@ -332,7 +456,7 @@ const App: React.FC = () => {
         // Prioritize a direct URL from the source, otherwise use a highly targeted search
         image: res.realImageUrl || `https://loremflickr.com/800/800/hongkong,${encodeURIComponent(res.imageKeyword || 'landmark')}/all?sig=${idx}`,
         description: res.description,
-        author: 'Heoi_AI',
+        author: 'CityScout_AI',
         isLive: true,
         sourceUrl: res.sourceUrl,
         address: res.address
@@ -376,8 +500,8 @@ const App: React.FC = () => {
   if (!profile.onboarded) {
     return (
       <div className="min-h-screen bg-white p-10 flex flex-col justify-between animate-fade-in overflow-hidden relative">
-        <div className="absolute top-[-5%] right-[-10%] opacity-10 rotate-12"><LanternIcon className="w-96 h-96" /></div>
-        <div className="mt-16"><LanternIcon className="w-20 h-20 mb-10" /><h1 className="text-7xl font-black text-[#de2810] tracking-tighter leading-[0.9] mb-4 uppercase">Heoi! <br/><span className="text-gray-900">去</span></h1></div>
+        <div className="absolute top-[-5%] right-[-10%] opacity-10 rotate-12"><ExploreIcon className="w-96 h-96" /></div>
+        <div className="mt-16"><ExploreIcon className="w-20 h-20 mb-10" /><h1 className="text-7xl font-black text-[#de2810] tracking-tighter leading-[0.9] mb-4 uppercase">CityScout <br/><span className="text-gray-900">🔍</span></h1></div>
         <form onSubmit={(e) => { e.preventDefault(); setProfile(p => ({ ...p, onboarded: true })); }} className="space-y-10 mb-8 z-10">
           <input type="text" placeholder="Explorer Name" className="w-full text-4xl font-black border-b-4 border-gray-100 focus:border-[#de2810] outline-none py-3" value={profile.name} onChange={(e) => setProfile(p => ({ ...p, name: e.target.value }))} required />
           <div className="grid grid-cols-2 gap-4">
@@ -404,8 +528,8 @@ const App: React.FC = () => {
       
       <header className="fixed top-0 left-0 right-0 h-20 bg-white/95 backdrop-blur-xl border-b-2 border-gray-50 flex items-center justify-between px-8 z-40 max-w-md mx-auto">
         <div className="flex items-center space-x-3">
-          <LanternIcon className="w-6 h-6" />
-          <span className="text-2xl font-black italic text-[#de2810] tracking-tighter uppercase leading-none">Heoi!</span>
+          <ExploreIcon className="w-6 h-6" />
+          <span className="text-2xl font-black italic text-[#de2810] tracking-tighter uppercase leading-none">CityScout</span>
           {profile.isPremium && <span className="text-[8px] font-black bg-[#de2810] text-white px-2 py-0.5 rounded-full tracking-tighter leading-none h-4 flex items-center">ELITE</span>}
         </div>
         <button onClick={() => setActiveTab('profile')} className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden border-2 border-gray-50 shadow-sm">
@@ -421,7 +545,7 @@ const App: React.FC = () => {
             <div className="space-y-8 bg-gray-50 p-8 rounded-[40px] border-2 border-gray-100">
               <textarea placeholder="Describe your perfect HK afternoon..." className="w-full h-48 bg-transparent border-none outline-none text-lg font-bold resize-none" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} />
               <button onClick={handleAiPlan} disabled={isGenerating || !aiPrompt} className="w-full bg-[#de2810] text-white font-black py-6 rounded-3xl flex items-center justify-center space-x-4 uppercase tracking-[0.2em] text-xs">
-                {isGenerating ? <span>Illuminating...</span> : <><span>Plan Path</span> <LanternIcon className="w-5 h-5" fill="white" /></>}
+                {isGenerating ? <span>Illuminating...</span> : <><span>Plan Path</span> <ExploreIcon className="w-5 h-5" fill="white" /></>}
               </button>
             </div>
             {itinerary && (
@@ -450,7 +574,7 @@ const App: React.FC = () => {
                  </div>
                </div>
                <div className="absolute bottom-4 right-4 bg-[#de2810] w-12 h-12 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
-                 <LanternIcon className="w-6 h-6" fill="white" />
+                 <ExploreIcon className="w-6 h-6" fill="white" />
                </div>
             </div>
 

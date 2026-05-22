@@ -8,12 +8,12 @@ export const COLORS = {
   gold: '#D97706'
 };
 
-export const LanternIcon = ({ className = "w-6 h-6", fill = "#de2810" }) => (
+export const ExploreIcon = ({ className = "w-6 h-6", fill = "#de2810" }) => (
   <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M40 5 L60 5 L60 15 C80 20 85 45 85 55 C85 75 70 85 50 85 C30 85 15 75 15 55 C15 45 20 20 40 15 Z" fill={fill}/>
-    <circle cx="38" cy="88" r="5" fill={fill} />
-    <circle cx="62" cy="88" r="5" fill={fill} />
-    <circle cx="50" cy="50" r="1.5" fill="white" opacity="0.4"/>
+    <circle cx="50" cy="50" r="40" stroke={fill} strokeWidth="6" fill="none"/>
+    <path d="M50 15 L50 85 M15 50 L85 50" stroke={fill} strokeWidth="6" strokeLinecap="round"/>
+    <circle cx="50" cy="50" r="15" stroke={fill} strokeWidth="6" fill="none"/>
+    <circle cx="50" cy="50" r="6" fill={fill}/>
   </svg>
 );
 
@@ -126,6 +126,70 @@ export const MOCK_EXPERIENCES = [
     author: 'TechGeek',
     address: 'Fuk Wa Street and Tai Nan Street',
     date: 'Daily, 1 PM - 7 PM',
-    venue: 'Apleliu St Area'
+    venue: 'Apliu Street'
+  },
+  {
+    id: '5',
+    title: 'Victoria Peak Morning Hike',
+    vibe: ['Hidden Nature', 'Photo Spots'],
+    difficulty: 'Moderate',
+    cost: 'Free',
+    location: 'The Peak',
+    district: 'HK Island',
+    duration: '3 hrs',
+    image: 'https://images.unsplash.com/photo-1558231580-f002241cfda4?q=80&w=800&auto=format&fit=crop',
+    description: 'Skip the tram and hike up the Morning Trail via Hatton Road. The rewarding sunrise views of the entire Victoria Harbour are unbeatable.',
+    author: 'TrailBlazer',
+    address: 'Hatton Road, Mid-Levels',
+    date: 'Daily, Best before 8 AM',
+    venue: 'Victoria Peak'
+  },
+  {
+    id: '6',
+    title: 'Temple Street Night Market',
+    vibe: ['Neon Nightlife', 'Foodie Paradise'],
+    difficulty: 'Easy',
+    cost: '$$',
+    location: 'Yau Ma Tei',
+    district: 'Kowloon',
+    duration: '2.5 hrs',
+    image: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?q=80&w=800&auto=format&fit=crop',
+    description: 'Immerse yourself in the bustling atmosphere of Temple Street. Try the claypot rice, browse antiques, and enjoy the neon-lit chaos.',
+    author: 'NeonExplorer',
+    address: 'Temple Street, Yau Ma Tei',
+    date: 'Daily, 7 PM - Midnight',
+    venue: 'Temple Street'
+  },
+  {
+    id: '7',
+    title: 'Lamma Island Seafood & Trails',
+    vibe: ['Low-key Chill', 'Foodie Paradise'],
+    difficulty: 'Moderate',
+    cost: '$$$',
+    location: 'Lamma Island',
+    district: 'Outlying Islands',
+    duration: '6 hrs',
+    image: 'https://images.unsplash.com/photo-1516939884455-1445c8652f83?q=80&w=800&auto=format&fit=crop',
+    description: 'Take a ferry to Yung Shue Wan, hike the family trail to Sok Kwu Wan, and reward yourself with fresh seafood at the stilted restaurants.',
+    author: 'IslandHopper',
+    address: 'Yung Shue Wan Ferry Pier',
+    date: 'Weekends, 10 AM - 6 PM',
+    venue: 'Lamma Island'
+  },
+  {
+    id: '8',
+    title: 'Lan Kwai Fong Pub Crawl',
+    vibe: ['Neon Nightlife', 'Live Loud'],
+    difficulty: 'Challenging',
+    cost: '$$$$',
+    location: 'Central',
+    district: 'HK Island',
+    duration: '4 hrs',
+    image: 'https://images.unsplash.com/photo-1627664819818-e147d6221422?q=80&w=800&auto=format&fit=crop',
+    description: 'Experience the epicentre of Hong Kong\'s nightlife. Move through crowded streets, hidden speakeasies, and rooftop bars in one unforgettable night.',
+    author: 'PartyAnimal',
+    address: 'Lan Kwai Fong, Central',
+    date: 'Friday & Saturday nights',
+    venue: 'LKF'
   }
 ];

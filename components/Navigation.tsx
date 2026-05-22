@@ -9,7 +9,7 @@ interface NavigationProps {
 const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'discover', icon: '🔍', label: 'Explore' },
-    { id: 'ai', icon: '🤖', label: 'Heoi! AI' },
+    { id: 'ai', icon: '🤖', label: 'Plan AI' },
     { id: 'meetups', icon: '🤝', label: 'Social' },
     { id: 'profile', icon: '👤', label: 'Profile' },
   ];
